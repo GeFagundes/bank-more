@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/Account/">
+    <Project Path="src/Services/Account/Account.Api/Account.Api.csproj" />
+    <Project Path="src/Services/Account/Account.Application/Account.Application.csproj" />
+    <Project Path="src/Services/Account/Account.Domain/Account.Domain.csproj" />
+    <Project Path="src/Services/Account/Account.Infra/Account.Infra.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Transfer/">
+    <Project Path="src/Services/Transfer/Transfer.Api/Transfer.Api.csproj" />
+    <Project Path="src/Services/Transfer/Transfer.Application/Transfer.Application.csproj" />
+    <Project Path="src/Services/Transfer/Transfer.Domain/Transfer.Domain.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Account.Tests/Account.Tests.csproj" />
+    <Project Path="tests/Transfer.Tests/Transfer.Tests.csproj" />
+  </Folder>
+</Solution>
