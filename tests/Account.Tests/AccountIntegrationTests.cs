@@ -3,6 +3,7 @@ using Account.Domain.Interfaces;
 using Account.Infra.Context;
 using Account.Infra.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Account.Tests
 {
@@ -11,6 +12,7 @@ namespace Account.Tests
         private readonly AccountDbContext _context;
         private readonly IAccountRepository _repository;
         private readonly AccountService _service;
+        private readonly IConfiguration _configuration;
 
         public AccountIntegrationTests()
         {
@@ -21,7 +23,19 @@ namespace Account.Tests
 
             _context = new AccountDbContext(options);
             _repository = new AccountRepository(_context);
-            _service = new AccountService(_repository, _context);
+
+            var myConfiguration = new Dictionary<string, string>
+            {
+                {"Jwt:Secret", "b2a14bbe-62f7-4f89-9630-88de0ffb0212" },
+                {"Jwt:Issuer", "AccountService" },
+                {"Jwt:Audience", "AccountServiceExtract" }
+            };
+
+            _configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(myConfiguration!)
+                .Build();
+
+            _service = new AccountService(_repository, _context, _configuration);
         }
 
         [Fact]

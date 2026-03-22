@@ -2,6 +2,7 @@
 using Account.Domain.Interfaces;
 using Account.Infra.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Moq;
 
 namespace Account.Tests
@@ -11,7 +12,8 @@ namespace Account.Tests
         private readonly Mock<IAccountRepository> _repositoryMock;
         private readonly AccountService _service;
         private readonly AccountDbContext _context;
-
+        private readonly IConfiguration _configuration;
+        
         public AccountServiceTests()
         {
             _repositoryMock = new Mock<IAccountRepository>();
@@ -22,7 +24,19 @@ namespace Account.Tests
                 .Options;
 
             _context = new AccountDbContext(options);
-            _service = new AccountService(_repositoryMock.Object, _context);
+
+            var myConfiguration = new Dictionary<string, string>
+            {
+                {"Jwt:Secret", "b2a14bbe-62f7-4f89-9630-88de0ffb0212" },
+                {"Jwt:Issuer", "AccountService" },
+                {"Jwt:Audience", "AccountServiceExtract" }
+            };
+
+            _configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(myConfiguration!)
+                .Build();
+
+            _service = new AccountService(_repositoryMock.Object, _context, _configuration);
         }
 
         [Fact]
