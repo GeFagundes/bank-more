@@ -98,7 +98,7 @@ namespace Account.Application.Services
             return tokenHandler.WriteToken(token);
         }
 
-        private string HashPassword(string password, string salt)
+        public string HashPassword(string password, string salt)
         {
             using var sha256 = SHA256.Create();
             var saltedPassword = password + salt;
