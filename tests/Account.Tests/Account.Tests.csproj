@@ -26,7 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Services\Account\Account.Application\Account.Application.csproj" />
     <ProjectReference Include="..\..\src\Services\Account\Account.Domain\Account.Domain.csproj" />
-    <ProjectReference Include="..\..\src\Services\Account\Account.Infra\Account.Infra.csproj" />
+    <ProjectReference Include="..\..\src\Services\Account\Account.Infrastructure\Account.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

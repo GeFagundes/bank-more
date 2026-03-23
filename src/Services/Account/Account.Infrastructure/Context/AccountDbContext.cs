@@ -9,7 +9,7 @@ namespace Account.Infra.Context
 
         public DbSet<Account.Domain.Entities.Account> Accounts => Set<Account.Domain.Entities.Account>();
         public DbSet<Transaction> Transactions => Set<Transaction>();
-        public DbSet<IdempotencyAccount> IdempotencyAccounts => Set<IdempotencyAccount>();
+        public DbSet<Idempotency> IdempotencyAccounts => Set<Idempotency>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -63,20 +63,23 @@ namespace Account.Infra.Context
                 builder.Property(t => t.CreatedAt)
                        .HasColumnName("transaction_date")
                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                //// Configures the identifiers
-                //builder.Property(t => t.RequestId).HasMaxLength(100).IsRequired();
-                //builder.Property(t => t.AccountNumber).HasMaxLength(6).IsRequired();
             });
 
-            modelBuilder.Entity<IdempotencyAccount>(builder =>
+            modelBuilder.Entity<Idempotency>(builder =>
             {
                 builder.ToTable("idempotency_checking_account");
                 builder.HasKey(i => i.IdempotencyKey);
 
-                builder.Property(i => i.IdempotencyKey).HasColumnName("idempotency_key").IsRequired();
-                builder.Property(i => i.RequestBody).HasColumnName("request_body");
-                builder.Property(i => i.ResponseBody).HasColumnName("response_body");
+                builder.Property(i => i.IdempotencyKey)
+                       .HasColumnName("idempotency_key")
+                       .IsRequired();
+
+                builder.Property(i => i.RequestBody)
+                       .HasColumnName("request_body")
+                       .IsRequired();
+                builder.Property(i => i.ResponseBody)
+                       .HasColumnName("response_body")
+                       .IsRequired();
             });
 
             base.OnModelCreating(modelBuilder);

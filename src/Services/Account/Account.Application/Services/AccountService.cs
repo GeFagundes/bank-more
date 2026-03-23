@@ -170,6 +170,12 @@ namespace Account.Application.Services
             };
         }
 
+        public async Task ProcessTransactionAsync(TransactionRequest request)
+        {
+            // Check if the request has already been processed (Idempotence)
+            //var alreadyProcessed = await 
+        }
+
         public string HashPassword(string password, string salt)
         {
             using var sha256 = SHA256.Create();

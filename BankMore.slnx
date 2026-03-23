@@ -5,7 +5,7 @@
     <Project Path="src/Services/Account/Account.Api/Account.Api.csproj" />
     <Project Path="src/Services/Account/Account.Application/Account.Application.csproj" />
     <Project Path="src/Services/Account/Account.Domain/Account.Domain.csproj" />
-    <Project Path="src/Services/Account/Account.Infra/Account.Infra.csproj" />
+    <Project Path="src/Services/Account/Account.Infrastructure/Account.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/Services/Transfer/">
     <Project Path="src/Services/Transfer/Transfer.Api/Transfer.Api.csproj" />
