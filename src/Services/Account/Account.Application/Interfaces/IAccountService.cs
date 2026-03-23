@@ -11,6 +11,7 @@ namespace Account.Application.Interfaces
         string GenerateJwtToken(AccountEntity account);
         Task ProcessTransactionAsync(TransactionRequest request, string? loggedUserAccount);
         Task<BalanceResponse> GetBalanceAsync(string accountNumber);
+        Task<StatementResponse> GetStatementAsync(string accountNumber);
         string HashPassword(string password, string salt);
     }
    

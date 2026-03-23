@@ -141,5 +141,36 @@ namespace Account.Api.Controllers
                 });
             }
         }
+
+        [HttpGet("statement")]
+        [Authorize]
+        public async Task<IActionResult> GetStatement()
+        {
+            var loggedUserAccount = User.FindFirst("AccountNumber")?.Value;
+
+            if (string.IsNullOrEmpty(loggedUserAccount))
+            {
+                return BadRequest(new
+                {
+                    mesage = "Account information missing in token.",
+                    type = "INVALID_TOKEN"
+                });
+            }
+
+            try
+            {
+                var statement = await _accountService.GetStatementAsync(loggedUserAccount);
+
+                return Ok(statement);
+            }
+            catch (BusinessException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message,
+                    type = ex.ErrorCode
+                });
+            }
+        }
     }
 }

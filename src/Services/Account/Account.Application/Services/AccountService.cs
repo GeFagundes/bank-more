@@ -189,16 +189,39 @@ namespace Account.Application.Services
             }
 
             var transactions = await _repository.GetTransactionsByAccountAsync(accountNumber);
-            var totalCredits = transactions.Where(t => t.TransactionType == "C").Sum(t => t.Amount);
-            var totalDebits = transactions.Where(t => t.TransactionType == "D").Sum(t => t.Amount);
-            var currentBalance = totalCredits - totalDebits;
+            decimal credits = transactions.Where(c => c.TransactionType == "C").Sum(c => c.Amount);
+            decimal debits = transactions.Where(d => d.TransactionType == "D").Sum(d => d.Amount);
+            decimal balance = credits - debits;
 
             return new BalanceResponse
             {
                 AccountNumber = account.Number,
                 AccountHolderName = account.Name,
                 RequestDate = DateTime.Now,
-                CurrentBalance = currentBalance
+                CurrentBalance = balance
+            };
+        }
+
+        public async Task<StatementResponse> GetStatementAsync(string accountNumber)
+        {
+            var account = await _repository.GetByDocumentOrAccountAsync(accountNumber)
+                ?? throw new BusinessException("Unregistered account.", "INVALID_ACCOUNT");
+
+            var transactions = await _repository.GetTransactionsByAccountAsync(accountNumber);
+            decimal credits = transactions.Where(c => c.TransactionType == "C").Sum(c => c.Amount);
+            decimal debits = transactions.Where(d => d.TransactionType == "D").Sum(d => d.Amount);
+            decimal balance = credits - debits;
+            return new StatementResponse
+            {
+                AccountNumber = account.Number,
+                CurrentBalance = balance,
+                History = transactions.OrderByDescending(t => t.CreatedAt).Select(t => new TransactionItem
+                {
+                    RequestId = t.RequestId,
+                    Type = t.TransactionType,
+                    Value = (decimal)t.Amount,
+                    Date = t.CreatedAt
+                }).ToList()
             };
         }
         
