@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Transfer.Infrastructure\Transfer.Infrastructure.csproj" />
     <ProjectReference Include="..\Transfer.Application\Transfer.Application.csproj" />
-    <ProjectReference Include="..\Transfer.Infra\Transfer.Infra.csproj" />
   </ItemGroup>
 
 </Project>

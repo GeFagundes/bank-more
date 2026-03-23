@@ -11,6 +11,7 @@
     <Project Path="src/Services/Transfer/Transfer.Api/Transfer.Api.csproj" />
     <Project Path="src/Services/Transfer/Transfer.Application/Transfer.Application.csproj" />
     <Project Path="src/Services/Transfer/Transfer.Domain/Transfer.Domain.csproj" />
+    <Project Path="Transfer.Infrastructure/Transfer.Infrastructure.csproj" Id="9767af1f-c4da-4d91-9fa2-99d396755665" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Account.Tests/Account.Tests.csproj" />
