@@ -1,6 +1,7 @@
 ﻿using Account.Application.Services;
 using Account.Domain.Interfaces;
 using Account.Infra.Context;
+using Account.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -13,7 +14,8 @@ namespace Account.Tests
         private readonly AccountService _service;
         private readonly AccountDbContext _context;
         private readonly IConfiguration _configuration;
-        
+        private readonly IIdempotencyRepository _idempotencyRepository;
+
         public AccountServiceTests()
         {
             _repositoryMock = new Mock<IAccountRepository>();
@@ -36,7 +38,9 @@ namespace Account.Tests
                 .AddInMemoryCollection(myConfiguration!)
                 .Build();
 
-            _service = new AccountService(_repositoryMock.Object, _context, _configuration);
+            _idempotencyRepository = new IdempotencyRepository(_context);
+
+            _service = new AccountService(_repositoryMock.Object, _context, _configuration, _idempotencyRepository);
         }
 
         [Fact]

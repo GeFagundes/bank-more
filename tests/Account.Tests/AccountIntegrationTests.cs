@@ -2,6 +2,7 @@
 using Account.Domain.Interfaces;
 using Account.Infra.Context;
 using Account.Infra.Repositories;
+using Account.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -13,6 +14,7 @@ namespace Account.Tests
         private readonly IAccountRepository _repository;
         private readonly AccountService _service;
         private readonly IConfiguration _configuration;
+        private readonly IIdempotencyRepository _idempotencyRepository;
 
         public AccountIntegrationTests()
         {
@@ -35,7 +37,9 @@ namespace Account.Tests
                 .AddInMemoryCollection(myConfiguration!)
                 .Build();
 
-            _service = new AccountService(_repository, _context, _configuration);
+            _idempotencyRepository = new IdempotencyRepository(_context);
+
+            _service = new AccountService(_repository, _context, _configuration, _idempotencyRepository);
         }
 
         [Fact]
