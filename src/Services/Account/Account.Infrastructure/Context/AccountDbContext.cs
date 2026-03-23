@@ -9,7 +9,7 @@ namespace Account.Infra.Context
 
         public DbSet<Account.Domain.Entities.Account> Accounts => Set<Account.Domain.Entities.Account>();
         public DbSet<Transaction> Transactions => Set<Transaction>();
-        public DbSet<Idempotency> IdempotencyAccounts => Set<Idempotency>();
+        public DbSet<Idempotency> Idempotencies => Set<Idempotency>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

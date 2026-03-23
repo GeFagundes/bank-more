@@ -5,6 +5,7 @@ using Account.Domain.Exceptions;
 using Account.Domain.Interfaces;
 using Account.Infra.Context;
 using Account.Infra.Repositories;
+using Account.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -21,6 +22,7 @@ builder.Services.AddDbContext<AccountDbContext>(options => options.UseSqlite(con
 // --- DEPENDENCY INJECTION (LAYERS) ---
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
 
 // --- GLOBAL ERROR HANDLING ---
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

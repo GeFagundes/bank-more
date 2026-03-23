@@ -90,6 +90,11 @@ namespace Account.Api.Controllers
         {
             var loggedUserAccount = User.FindFirst("AccountNumber")?.Value;
 
+            if (string.IsNullOrEmpty(loggedUserAccount))
+            {
+                return Unauthorized(new ErrorResponse("Account information missing in token.", "UNAUTHORIZED"));
+            }
+
             try
             {
                 await _accountService.ProcessTransactionAsync(request, loggedUserAccount);

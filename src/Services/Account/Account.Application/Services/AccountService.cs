@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using AccountEntity = Account.Domain.Entities.Account;
 
 namespace Account.Application.Services
@@ -19,12 +20,14 @@ namespace Account.Application.Services
         private readonly IAccountRepository _repository;
         private readonly AccountDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IIdempotencyRepository _idempotencyRepository;
 
-        public AccountService(IAccountRepository repository, AccountDbContext context, IConfiguration configuration)
+        public AccountService(IAccountRepository repository, AccountDbContext context, IConfiguration configuration, IIdempotencyRepository idempotencyRepository)
         {
             _repository = repository;
             _context = context;
             _configuration = configuration;
+            _idempotencyRepository = idempotencyRepository;
         }
 
         public async Task<AccountEntity?> GetAccountByIdentifierAsync(string identifier)
@@ -106,44 +109,73 @@ namespace Account.Application.Services
 
         public async Task ProcessTransactionAsync(TransactionRequest request, string? loggedUserAccount)
         {
-            string targetAccount = !string.IsNullOrEmpty(request.AccountNumber) ? request.AccountNumber : loggedUserAccount;
+            var alreadyProcessed = await _idempotencyRepository.GetByIdAsync(request.RequestId);
 
-            if (string.IsNullOrEmpty(targetAccount))
+            if (alreadyProcessed != null)
             {
-                throw new BusinessException("Account number not provided.", "INVALID_ACCOUNT");
+                return;
             }
             
-            if (request.Value <= 0)
+            using var dbTransaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                throw new BusinessException("Only positive values.", "INVALID_VALUE");
+                string targetAccount = !string.IsNullOrEmpty(request.AccountNumber) ? request.AccountNumber : loggedUserAccount;
+
+                if (string.IsNullOrEmpty(targetAccount))
+                {
+                    throw new BusinessException("Account number not provided.", "INVALID_ACCOUNT");
+                }
+
+                if (request.Value <= 0)
+                {
+                    throw new BusinessException("Only positive values.", "INVALID_VALUE");
+                }
+
+                if (request.Type != "C" && request.Type != "D")
+                {
+                    throw new BusinessException("Type should be C or D.", "INVALID_TYPE");
+                }
+
+                var account = await _repository.GetByDocumentOrAccountAsync(targetAccount);
+
+                if (account == null)
+                {
+                    throw new BusinessException("Unregistered account.", "INVALID_ACCOUNT");
+                }
+
+                if (!account.IsActive)
+                {
+                    throw new BusinessException("Inactive account.", "INACTIVE_ACCOUNT");
+                }
+
+                if (targetAccount != loggedUserAccount && request.Type == "D")
+                {
+                    throw new BusinessException("Only credits is accepted for third party accounts.", "INVALID_TYPE");
+                }
+
+                var transaction = new Transaction(request.RequestId, targetAccount, request.Value, request.Type);
+
+                await _repository.SaveTransactionAsync(transaction);
+
+                var idempotency = new Idempotency(
+                    request.RequestId,
+                    JsonSerializer.Serialize(request, _jsonOptions),
+                    "Success"
+                );
+
+                await _idempotencyRepository.SaveAsync(idempotency);
+
+                await _context.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
+            }
+            catch (BusinessException ex)
+            {
+                await dbTransaction.RollbackAsync();
+                throw;
             }
 
-            if (request.Type != "C" && request.Type != "D")
-            {
-                throw new BusinessException("Type should be C or D.", "INVALID_TYPE");
-            }
-
-            var account = await _repository.GetByDocumentOrAccountAsync(targetAccount);
-
-            if (account == null)
-            {
-                throw new BusinessException("Unregistered account.", "INVALID_ACCOUNT");
-            }
-
-            if (!account.IsActive)
-            {
-                throw new BusinessException("Inactive account.", "INACTIVE_ACCOUNT");
-            }
-
-            if(targetAccount != loggedUserAccount && request.Type == "D")
-            {
-                throw new BusinessException("Only credits is accepted for third party accounts.", "INVALID_TYPE");
-            }
-
-            var transaction = new Transaction(request.RequestId, targetAccount, request.Value, request.Type);
             
-            await _repository.SaveTransactionAsync(transaction);
-            await _context.SaveChangesAsync();
         }
 
         public async Task<BalanceResponse> GetBalanceAsync(string accountNumber)
@@ -169,13 +201,7 @@ namespace Account.Application.Services
                 CurrentBalance = currentBalance
             };
         }
-
-        public async Task ProcessTransactionAsync(TransactionRequest request)
-        {
-            // Check if the request has already been processed (Idempotence)
-            //var alreadyProcessed = await 
-        }
-
+        
         public string HashPassword(string password, string salt)
         {
             using var sha256 = SHA256.Create();
@@ -195,5 +221,11 @@ namespace Account.Application.Services
 
             return storedHash == enteredHash;
         }
+
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
     }
 }
