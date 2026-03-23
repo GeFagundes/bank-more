@@ -88,6 +88,7 @@ namespace Account.Api.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> ProcessTransaction([FromBody] TransactionRequest request)
         {
+            var internalRequestId = Guid.NewGuid().ToString();
             var loggedUserAccount = User.FindFirst("AccountNumber")?.Value;
 
             if (string.IsNullOrEmpty(loggedUserAccount))
@@ -97,7 +98,7 @@ namespace Account.Api.Controllers
 
             try
             {
-                await _accountService.ProcessTransactionAsync(request, loggedUserAccount);
+                await _accountService.ProcessTransactionAsync(request, internalRequestId, loggedUserAccount);
 
                 return NoContent();
             }

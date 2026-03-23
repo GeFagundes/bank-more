@@ -9,7 +9,7 @@ namespace Account.Application.Interfaces
         Task<string> CreateAccountAsync(string name, string document, string password);
         Task<string?> LoginAsync(string identifier, string password);
         string GenerateJwtToken(AccountEntity account);
-        Task ProcessTransactionAsync(TransactionRequest request, string? loggedUserAccount);
+        Task ProcessTransactionAsync(TransactionRequest request, string requestId,string? loggedUserAccount);
         Task<BalanceResponse> GetBalanceAsync(string accountNumber);
         Task<StatementResponse> GetStatementAsync(string accountNumber);
         string HashPassword(string password, string salt);

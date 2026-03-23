@@ -93,7 +93,7 @@ namespace Account.Application.Services
                     new Claim("AccountNumber", account.Number)
                 }),
 
-                Expires = DateTime.UtcNow.AddMinutes(50),
+                Expires = DateTime.UtcNow.AddMinutes(10),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
 
@@ -107,9 +107,9 @@ namespace Account.Application.Services
             return tokenHandler.WriteToken(token);
         }
 
-        public async Task ProcessTransactionAsync(TransactionRequest request, string? loggedUserAccount)
+        public async Task ProcessTransactionAsync(TransactionRequest request, string requestId, string? loggedUserAccount)
         {
-            var alreadyProcessed = await _idempotencyRepository.GetByIdAsync(request.RequestId);
+            var alreadyProcessed = await _idempotencyRepository.GetByIdAsync(requestId);
 
             if (alreadyProcessed != null)
             {
@@ -154,12 +154,12 @@ namespace Account.Application.Services
                     throw new BusinessException("Only credits is accepted for third party accounts.", "INVALID_TYPE");
                 }
 
-                var transaction = new Transaction(request.RequestId, targetAccount, request.Value, request.Type);
+                var transaction = new Transaction(requestId, targetAccount, request.Value, request.Type);
 
                 await _repository.SaveTransactionAsync(transaction);
 
                 var idempotency = new Idempotency(
-                    request.RequestId,
+                    requestId,
                     JsonSerializer.Serialize(request, _jsonOptions),
                     "Success"
                 );

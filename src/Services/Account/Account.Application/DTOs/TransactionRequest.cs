@@ -5,8 +5,7 @@ using System.Text;
 namespace Account.Application.DTOs
 {
     public record TransactionRequest(
-         string RequestId,
-         string? AccountNumber,
+         string AccountNumber,
          decimal Value,
          string Type
      );
