@@ -1,4 +1,8 @@
-﻿using Account.Domain.Interfaces;
+﻿using Account.Application.DTOs;
+using Account.Application.Interfaces;
+using Account.Domain.Entities;
+using Account.Domain.Exceptions;
+using Account.Domain.Interfaces;
 using Account.Infra.Context;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -10,7 +14,7 @@ using AccountEntity = Account.Domain.Entities.Account;
 
 namespace Account.Application.Services
 {
-    public class AccountService
+    public class AccountService : IAccountService
     {
         private readonly IAccountRepository _repository;
         private readonly AccountDbContext _context;
@@ -82,9 +86,11 @@ namespace Account.Application.Services
 
                     // JTI is a unique ID for the token (avoids Réplay Attack)
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+
+                    new Claim("AccountNumber", account.Number)
                 }),
 
-                Expires = DateTime.UtcNow.AddMinutes(5),
+                Expires = DateTime.UtcNow.AddMinutes(50),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
 
@@ -96,6 +102,48 @@ namespace Account.Application.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);
+        }
+
+        public async Task ProcessTransactionAsync(TransactionRequest request, string? loggedUserAccount)
+        {
+            string targetAccount = !string.IsNullOrEmpty(request.AccountNumber) ? request.AccountNumber : loggedUserAccount;
+
+            if (string.IsNullOrEmpty(targetAccount))
+            {
+                throw new BusinessException("Account number not provided.", "INVALID_ACCOUNT");
+            }
+            
+            if (request.Value <= 0)
+            {
+                throw new BusinessException("Only positive values.", "INVALID_VALUE");
+            }
+
+            if (request.Type != "C" && request.Type != "D")
+            {
+                throw new BusinessException("Type should be C or D.", "INVALID_TYPE");
+            }
+
+            var account = await _repository.GetByDocumentOrAccountAsync(targetAccount);
+
+            if (account == null)
+            {
+                throw new BusinessException("Unregistered account.", "INVALID_ACCOUNT");
+            }
+
+            if (!account.IsActive)
+            {
+                throw new BusinessException("Inactive account.", "INACTIVE_ACCOUNT");
+            }
+
+            if(targetAccount != loggedUserAccount && request.Type == "D")
+            {
+                throw new BusinessException("Only credits is accepted for third party accounts.", "INVALID_TYPE");
+            }
+
+            var transaction = new Transaction(request.RequestId, targetAccount, request.Value, request.Type);
+            
+            await _repository.SaveTransactionAsync(transaction);
+            await _context.SaveChangesAsync();
         }
 
         public string HashPassword(string password, string salt)

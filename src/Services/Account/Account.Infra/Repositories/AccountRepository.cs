@@ -29,10 +29,10 @@ namespace Account.Infra.Repositories
             await _context.Accounts.AddAsync(account);
         }
 
-        //public async Task AddTransactionAsync(Transaction transaction)
-        //{
-        //    await _context.Transactions.AddAsync(transaction);
-        //}
+        public async Task SaveTransactionAsync(Transaction transaction)
+        {
+            await _context.Transactions.AddAsync(transaction);
+        }
 
         //public async Task<IEnumerable<Transaction>> GetTransactionsByAccountIdAsync(int id)
         //{

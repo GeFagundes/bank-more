@@ -6,7 +6,7 @@ namespace Account.Domain.Interfaces
     {
         Task<Entities.Account?> GetByDocumentOrAccountAsync(string number);
         Task CreateAsync(Account.Domain.Entities.Account account);
-        //Task AddTransactionAsync(Transaction transaction);
+        Task SaveTransactionAsync(Transaction transaction);
         //Task<IEnumerable<Transaction>> GetTransactionsByAccountIdAsync(int id);
         Task UpdateAsync(Account.Domain.Entities.Account account);
         Task<IdempotencyAccount?> GetIdempotencyAsync(string key);

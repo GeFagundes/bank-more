@@ -1,6 +1,6 @@
 ﻿using Account.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-
+using AccountEntity = Account.Domain.Entities.Account;
 namespace Account.Infra.Context
 {
     public class AccountDbContext : DbContext
@@ -13,7 +13,7 @@ namespace Account.Infra.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Account.Domain.Entities.Account>(builder =>
+            modelBuilder.Entity<AccountEntity>(builder =>
             {
                 builder.ToTable("checking_account");
                 builder.HasKey(a => a.AccountId);
@@ -25,6 +25,8 @@ namespace Account.Infra.Context
                 builder.Property(a => a.IsActive).HasColumnName("is_active");
                 builder.Property(a => a.PasswordHash).HasColumnName("password").IsRequired();
                 builder.Property(a => a.Salt).HasColumnName("salt").IsRequired();
+
+                builder.HasIndex(a => a.Number).IsUnique();
             });
 
             modelBuilder.Entity<Transaction>(builder =>
@@ -33,16 +35,38 @@ namespace Account.Infra.Context
                 builder.HasKey(t => t.TransactionId);
                 builder.Property(t => t.TransactionId).HasColumnName("id_transaction");
 
-                builder.Property(t => t.TransactionId).HasColumnName("id_transaction");
-                builder.Property(t => t.AccountId).HasColumnName("id_checking_account").IsRequired();
+                builder.HasOne<AccountEntity>()
+                       .WithMany()
+                       .HasPrincipalKey(a => a.Number)
+                       .HasForeignKey(t => t.AccountNumber);
+
+                builder.Property(t => t.AccountNumber)
+                      .HasColumnName("account_number")
+                      .IsRequired();
+
+                builder.Property(t => t.RequestId)
+                       .HasColumnName("request_id")
+                       .IsRequired();
+
                 builder.Property(t => t.TransactionType)
                        .HasColumnName("transaction_type")
-                       .HasConversion<string>()
+                       .HasMaxLength(1)
+                       .IsFixedLength() // CHAR(1)
+                       .IsUnicode(false) // Performance gain by not being Unicode.
                        .IsRequired();
+
                 builder.Property(t => t.Amount)
                        .HasColumnName("amount")
                        .HasColumnType("DECIMAL(18,2)")
                        .IsRequired();
+
+                builder.Property(t => t.CreatedAt)
+                       .HasColumnName("transaction_date")
+                       .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                //// Configures the identifiers
+                //builder.Property(t => t.RequestId).HasMaxLength(100).IsRequired();
+                //builder.Property(t => t.AccountNumber).HasMaxLength(6).IsRequired();
             });
 
             modelBuilder.Entity<IdempotencyAccount>(builder =>

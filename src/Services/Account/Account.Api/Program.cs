@@ -1,4 +1,5 @@
 using Account.Api.Middleware;
+using Account.Application.Interfaces;
 using Account.Application.Services;
 using Account.Domain.Exceptions;
 using Account.Domain.Interfaces;
@@ -19,7 +20,7 @@ builder.Services.AddDbContext<AccountDbContext>(options => options.UseSqlite(con
 
 // --- DEPENDENCY INJECTION (LAYERS) ---
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 // --- GLOBAL ERROR HANDLING ---
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

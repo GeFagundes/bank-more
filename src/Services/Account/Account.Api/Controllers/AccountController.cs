@@ -1,5 +1,8 @@
 ﻿using Account.Api.DTOs;
+using Account.Application.DTOs;
+using Account.Application.Interfaces;
 using Account.Application.Services;
+using Account.Domain.Exceptions;
 using Account.Domain.Validations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,9 +13,9 @@ namespace Account.Api.Controllers
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
-        private readonly AccountService _accountService;
+        private readonly IAccountService _accountService;
 
-        public AccountController(AccountService accountService)
+        public AccountController(IAccountService accountService)
         {
             _accountService = accountService;
         }
@@ -76,6 +79,28 @@ namespace Account.Api.Controllers
                 account.IsActive
             );
             return Ok(response);
+        }
+
+        [HttpPost("transaction")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> ProcessTransaction([FromBody] TransactionRequest request)
+        {
+            var loggedUserAccount = User.FindFirst("AccountNumber")?.Value;
+
+            try
+            {
+                await _accountService.ProcessTransactionAsync(request, loggedUserAccount);
+
+                return NoContent();
+            }
+            catch (BusinessException ex)
+            {
+
+                return BadRequest(new { message = ex.Message, type = ex.ErrorCode }); 
+            }
         }
     }
 }
