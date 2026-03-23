@@ -7,9 +7,10 @@ namespace Account.Domain.Interfaces
         Task<Entities.Account?> GetByDocumentOrAccountAsync(string number);
         Task CreateAsync(Account.Domain.Entities.Account account);
         Task SaveTransactionAsync(Transaction transaction);
-        //Task<IEnumerable<Transaction>> GetTransactionsByAccountIdAsync(int id);
-        Task UpdateAsync(Account.Domain.Entities.Account account);
-        Task<IdempotencyAccount?> GetIdempotencyAsync(string key);
-        Task SaveIdempotencyAsync(IdempotencyAccount idempotency);
+
+        Task<List<Transaction>> GetTransactionsByAccountAsync(string number);
+        //Task UpdateAsync(Account.Domain.Entities.Account account);
+        //Task<IdempotencyAccount?> GetIdempotencyAsync(string key);
+        //Task SaveIdempotencyAsync(IdempotencyAccount idempotency);
     }
 }

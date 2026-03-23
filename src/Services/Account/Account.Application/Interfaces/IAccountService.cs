@@ -10,6 +10,7 @@ namespace Account.Application.Interfaces
         Task<string?> LoginAsync(string identifier, string password);
         string GenerateJwtToken(AccountEntity account);
         Task ProcessTransactionAsync(TransactionRequest request, string? loggedUserAccount);
+        Task<BalanceResponse> GetBalanceAsync(string accountNumber);
         string HashPassword(string password, string salt);
     }
    

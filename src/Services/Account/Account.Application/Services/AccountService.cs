@@ -146,6 +146,30 @@ namespace Account.Application.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task<BalanceResponse> GetBalanceAsync(string accountNumber)
+        {
+            var account = await _repository.GetByDocumentOrAccountAsync(accountNumber) 
+                ?? throw new BusinessException("Unregistered account.", "INVALID_ACCOUNT");
+
+            if (!account.IsActive)
+            {
+                throw new BusinessException("Inactive account", "INACTIVE_ACCOUNT");
+            }
+
+            var transactions = await _repository.GetTransactionsByAccountAsync(accountNumber);
+            var totalCredits = transactions.Where(t => t.TransactionType == "C").Sum(t => t.Amount);
+            var totalDebits = transactions.Where(t => t.TransactionType == "D").Sum(t => t.Amount);
+            var currentBalance = totalCredits - totalDebits;
+
+            return new BalanceResponse
+            {
+                AccountNumber = account.Number,
+                AccountHolderName = account.Name,
+                RequestDate = DateTime.Now,
+                CurrentBalance = currentBalance
+            };
+        }
+
         public string HashPassword(string password, string salt)
         {
             using var sha256 = SHA256.Create();

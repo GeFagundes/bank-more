@@ -102,5 +102,39 @@ namespace Account.Api.Controllers
                 return BadRequest(new { message = ex.Message, type = ex.ErrorCode }); 
             }
         }
+
+        [HttpGet("balance")]
+        [Authorize]
+        [ProducesResponseType(typeof(BalanceResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetBalance()
+        {
+            var loggedUserAccount = User.FindFirst("AccountNumber")?.Value;
+
+            if (string.IsNullOrEmpty(loggedUserAccount))
+            {
+                return BadRequest(new 
+                {
+                    mesage = "Account information missing in token.",
+                    type = "INVALID_TOKEN"
+                });
+            }
+
+            try
+            {
+                var response = await _accountService.GetBalanceAsync(loggedUserAccount);
+
+                return Ok(response);
+            }
+            catch (BusinessException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message,
+                    type = ex.ErrorCode
+                });
+            }
+        }
     }
 }
